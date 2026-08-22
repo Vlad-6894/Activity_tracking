@@ -3,30 +3,24 @@ CREATE SCHEMA school;
 CREATE TABLE school.users (
     id SERIAL PRIMARY KEY,
     version BIGINT NOT NULL DEFAULT 1 CHECK(version>0),
-    name VARCHAR(50) NOT NULL CHECK (char_length(name) BETWEEN 3 AND 50),
+    username VARCHAR(50) NOT NULL CHECK (char_length(username) BETWEEN 3 AND 50),
     password VARCHAR(20) NOT NULL CHECK (char_length(password) BETWEEN 8 AND 20),
     money BIGINT NOT NULL CHECK(money>=0),
-    xp BIGINT NOT NULL CHECK(xp>0),
+    experience BIGINT NOT NULL CHECK(experience>0),
     level INTEGER NOT NULL CHECK(level>0),
 
-    UNIQUE(name)
+    UNIQUE(username)
 );
 
 CREATE TABLE school.questions (
     id SERIAL PRIMARY KEY,
     version BIGINT NOT NULL DEFAULT 1 CHECK(version>0),
-    name VARCHAR(100) NOT NULL CHECK(char_length(name) BETWEEN 1 AND 100),
-    description VARCHAR(3000) NOT NULL CHECK(char_length(name) BETWEEN 10 AND 3000),
+    title VARCHAR(100) NOT NULL CHECK(char_length(title) BETWEEN 1 AND 100),
+    description VARCHAR(3000),
     module INTEGER NOT NULL REFERENCES school.modules(id),
-    min_xp INTEGER NOT NULL CHECK(min_xp>0),
-    max_xp INTEGER NOT NULL CHECK(min_xp>0)
-);
-
-CREATE TABLE school.tasks_hints (
-    id SERIAL PRIMARY KEY,
-    version BIGINT NOT NULL DEFAULT 1 CHECK(version>0),
-    description VARCHAR(100) NOT NULL CHECK(char_length(name) BETWEEN 10 AND 100),
-    task_id INTEGER NOT NULL REFERENCES school.tasks(id)
+    min_experience INTEGER NOT NULL CHECK(min_experience>0),
+    max_experience INTEGER NOT NULL CHECK(min_experience>0),
+    hint_description VARCHAR(100) NOT NULL CHECK(char_length(name) BETWEEN 10 AND 100)
 );
 
 CREATE TABLE school.completed_questions (
@@ -42,15 +36,9 @@ CREATE TABLE school.tasks (
     name VARCHAR(100) NOT NULL CHECK(char_length(name) BETWEEN 1 AND 100),
     description VARCHAR(3000) NOT NULL CHECK(char_length(name) BETWEEN 10 AND 3000),
     module INTEGER NOT NULL REFERENCES school.modules (id),
-    min_xp INTEGER NOT NULL CHECK(min_xp>0),
-    max_xp INTEGER NOT NULL CHECK(min_xp>0)
-);
-
-CREATE TABLE school.tasks_hints (
-    id SERIAL PRIMARY KEY,
-    version BIGINT NOT NULL DEFAULT 1 CHECK(version>0),
-    description VARCHAR(100) NOT NULL CHECK(char_length(name) BETWEEN 10 AND 100),
-    task_id INTEGER NOT NULL REFERENCES school.tasks(id),
+    min_experience INTEGER NOT NULL CHECK(min_experience>0),
+    max_experience INTEGER NOT NULL CHECK(min_experience>0),
+    hint_description VARCHAR(100) NOT NULL CHECK(char_length(name) BETWEEN 10 AND 100)
 );
 
 CREATE TABLE school.completed_tasks (
@@ -63,14 +51,13 @@ CREATE TABLE school.completed_tasks (
 CREATE TABLE school.modules (
     id SERIAL PRIMARY KEY,
     version BIGINT NOT NULL DEFAULT 1 CHECK(version>0),
-    name VARCHAR(50) NOT NULL CHECK(char_length(name) BETWEEN 1 AND 50),
-    description VARCHAR(2000) NOT NULL CHECK(char_length(name) BETWEEN 10 AND 2000),
-    module INTEGER NOT NULL REFERENCES school.modules (id),
-    min_xp INTEGER NOT NULL CHECK(min_xp>0),
-    max_xp INTEGER NOT NULL CHECK(max_xp>0)
+    title VARCHAR(50) NOT NULL CHECK(char_length(title) BETWEEN 1 AND 50),
+    description VARCHAR(2000),
+    min_experience INTEGER NOT NULL CHECK(min_experience>0),
+    max_experience INTEGER NOT NULL CHECK(max_experience>0)
 );
 
-CREATE TABLE school.Achievement (
+CREATE TABLE school.achievement (
     id SERIAL PRIMARY KEY,
     version BIGINT NOT NULL DEFAULT 1 CHECK(version>0),
     name VARCHAR(20) CHECK(char_length(name) BETWEEN 1 AND 20),
