@@ -1,7 +1,9 @@
+name: activity-tracking
+
 services:
-  task-postgres:
+  activity-tracking-postgres:
     image: postgres:18.1-bookworm
-    container_name: postgres-db
+    container_name: activity-tracking-postgres
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -15,33 +17,33 @@ services:
       retries: 10
     restart: always
 
-  port-forwarder:
+  activity-tracking-port-forwarder:
     image: alpine/socat:1.8.0.3
-    container_name: postgres-port-forwarder
-    command: tcp-listen:5432,fork,reuseaddr tcp-connect:task-postgres:5432
+    container_name: activity-tracking-port-forwarder
+    command: tcp-listen:5432,fork,reuseaddr tcp-connect:activity-tracking-postgres:5432
     ports:
       - "127.0.0.1:${POSTGRES_HOST_PORT:-5432}:5432"
     depends_on:
-      task-postgres:
+      activity-tracking-postgres:
         condition: service_healthy
     restart: unless-stopped
 
-  postgres-migrate:
+  activity-tracking-migrate:
     image: migrate/migrate:v4.19.1
     user: "${DOCKER_UID:-0}:${DOCKER_GID:-0}"
     volumes:
       - ${PROJECT_ROOT}/migrations:/migrations
     depends_on:
-      task-postgres:
+      activity-tracking-postgres:
         condition: service_healthy
     command:
       - -path=/migrations
-      - -database=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@task-postgres:5432/${POSTGRES_DB}?sslmode=disable
+      - -database=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@activity-tracking-postgres:5432/${POSTGRES_DB}?sslmode=disable
       - up
 
-  ngrok:
+  activity-tracking-ngrok:
     image: ngrok/ngrok:3
-    container_name: env-ngrok
+    container_name: activity-tracking-ngrok
     restart: unless-stopped
     environment:
       - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
