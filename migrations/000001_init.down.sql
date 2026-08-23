@@ -1,8 +1,8 @@
 DROP TABLE app.battlepass_rewards;
 
-DROP TABLE app.achivement_user;
+DROP TABLE app.achievement_user;
 
-DROP TABLE app.achivements;
+DROP TABLE app.achievements;
 
 DROP TABLE app.activity;
 
