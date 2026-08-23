@@ -9,44 +9,31 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
     volumes:
-      - ${PROJECT_ROOT}/out/pg_data:/var/lib/postgresql:z
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
+      - pgdata:/var/lib/postgresql
     restart: always
-
-  activity-tracking-port-forwarder:
-    image: alpine/socat:1.8.0.3
-    container_name: activity-tracking-port-forwarder
-    command: tcp-listen:5432,fork,reuseaddr tcp-connect:activity-tracking-postgres:5432
-    ports:
-      - "127.0.0.1:${POSTGRES_HOST_PORT:-5432}:5432"
-    depends_on:
-      activity-tracking-postgres:
-        condition: service_healthy
-    restart: unless-stopped
+    
 
   activity-tracking-migrate:
     image: migrate/migrate:v4.19.1
-    user: "${DOCKER_UID:-0}:${DOCKER_GID:-0}"
     volumes:
       - ${PROJECT_ROOT}/migrations:/migrations
-    depends_on:
-      activity-tracking-postgres:
-        condition: service_healthy
-    command:
-      - -path=/migrations
-      - -database=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@activity-tracking-postgres:5432/${POSTGRES_DB}?sslmode=disable
-      - up
-
+      
+  activity-tracking-port-forwarder:
+    image: alpine/socat:1.8.1.3
+    container_name: activity-tracking-port-forwarder
+    command: tcp-listen:5432,fork,reuseaddr tcp-connect:activity-tracking-postgres:5432
+    ports:
+      - "127.0.0.1:5432:5432"
+    
   activity-tracking-ngrok:
     image: ngrok/ngrok:3
-    container_name: activity-tracking-ngrok
+    container_name: activity-tracking-env-ngrok
     restart: unless-stopped
     environment:
       - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
     command: http --url=${NGROK_DOMAIN} host.docker.internal:8080
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    
+volumes:
+  pgdata:
