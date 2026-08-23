@@ -2,57 +2,60 @@ include .env
 export
 
 export PROJECT_ROOT=$(shell pwd)
+export DOCKER_UID=$(shell id -u) #для Linux
+export DOCKER_GID=$(shell id -g) #для Linux
 
-env-up:
-	docker compose up -d fitnes_postgres
+postgres-up:
+	@docker compose up -d task-postgres
 
-env-down:
-	docker compose down fitnes_postgres
+postgres-down:
+	@docker compose down task-postgres
 
-env-ngrok-up:
-	docker compose up -d ngrok
-
-env-ngrok-down:
-	docker compose down ngrok
-
-env-cleanup:
-	@read -p "Очистить все volume файлы окружения? Опасность утери данных. [y.N]: " ans; \
-	if [ "$$ans" = "y" ]; then \
-		docker compose down -v fitnes_postgres && \
-		echo "Файлы окружения очищены"; \
+postgres-cleanup:
+	@read -p "Очистить pg_data? Опасность утери данных. [y/N]: " choice; \
+	if [ "$$choice" = "y" ] || [ "$$choice" = "Y" ]; then \
+		docker compose down task-postgres port-forwarder && \
+		sudo rm -rf ${PROJECT_ROOT}/out/pg_data && \
+		echo "Очищено"; \
 	else \
-		echo "Очистка окружения отменена"; \
+		echo "Операция отменена"; \
 	fi
 
-env-port-forward:
-	docker compose up -d port-forwarder
+port-forward-up:
+	@docker compose up -d port-forwarder
 
-env-port-close:
-	docker compose down port-forwarder
+port-forward-down:
+	@docker compose down port-forwarder
 
-migrate-create:
+ngrok-up:
+	@docker compose up -d ngrok
+
+ngrok-down:
+	@docker compose down ngrok
+
+create-migrate:
 	@if [ -z "$(seq)" ]; then \
-		echo "Отсутсвует необходимый параметр seq. Пример: make migrate-create seq=init"; \
+		echo "Нет параметра seq"; \
 		exit 1; \
-	fi; \
-	docker compose run --rm fitnes-postgres-migrate \
+	fi;
+	@docker compose run --rm postgres-migrate \
 		create \
 		-ext sql \
 		-dir /migrations \
 		-seq "$(seq)"
 
 migrate-up:
-	make migrate-action action=up
+	@make migrate-action action=up
 
 migrate-down:
-	make migrate-action action=down
+	@make migrate-action action=down n=$(or $(n),1)
 
 migrate-action:
 	@if [ -z "$(action)" ]; then \
-		echo "Отсутсвует необходимый параметр action. Пример: make migrate-action action=up"; \
+		echo "Нет параметра action"; \
 		exit 1; \
-	fi; \
-	docker compose run --rm fitnes-postgres-migrate \
+	fi;
+	@docker compose run --rm postgres-migrate \
 		-path /migrations \
-		-database postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@todoapp-postgres:5432/${POSTGRES_DB}?sslmode=disable \
-		"$(action)"
+		-database "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@task-postgres:5432/${POSTGRES_DB}?sslmode=disable" \
+		"$(action)" $(n)
