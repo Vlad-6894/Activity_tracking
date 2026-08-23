@@ -1,15 +1,11 @@
-DROP TABLE school.achievement;
+DROP TABLE app.battlepass_rewards;
 
-DROP TABLE school.completed_tasks;
+DROP TABLE app.achivement_user;
 
-DROP TABLE school.completed_questions;
+DROP TABLE app.achivements;
 
-DROP TABLE school.tasks;
+DROP TABLE app.activity;
 
-DROP TABLE school.questions;
+DROP TABLE app.users;
 
-DROP TABLE school.modules;
-
-DROP TABLE school.users;
-
-DROP SCHEMA school;
+DROP SCHEMA app;

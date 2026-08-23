@@ -1,66 +1,42 @@
-CREATE SCHEMA school;
+CREATE SCHEMA app;
 
-CREATE TABLE school.users (
+CREATE TABLE app.users (
     id SERIAL PRIMARY KEY,
-    version BIGINT NOT NULL DEFAULT 1 CHECK(version>0),
-    username VARCHAR(50) NOT NULL CHECK (char_length(username) BETWEEN 3 AND 50),
-    password VARCHAR(20) NOT NULL CHECK (char_length(password) BETWEEN 8 AND 20),
-    money BIGINT NOT NULL CHECK(money>=0),
-    experience BIGINT NOT NULL CHECK(experience>0),
-    level INTEGER NOT NULL CHECK(level>0),
+    full_name VARCHAR(100) NOT NULL CHECK(char_length(full_name) BETWEEN 2 AND 100),
+    age INTEGER NOT NULL CHECK(age>=0),
+    google_refresh_token TEXT,
+    steap_goal INTEGER CHECK(steap_goal>=0),
+    rest_days INTEGER NOT NULL CHECK(rest_days>=0),
+    streak INTEGER NOT NULL CHECK(streak>=0),
+    created_at TIMESTAMPTZ NOT NULL,
+    updated_at TIMESTAMPTZ
 
-    UNIQUE(username)
+    CHECK(
+        updated_at IS NULL 
+        OR
+        updated_at>=created_at
+    )
 );
 
-CREATE TABLE school.questions (
-    id SERIAL PRIMARY KEY,
-    version BIGINT NOT NULL DEFAULT 1 CHECK(version>0),
-    title VARCHAR(100) NOT NULL CHECK(char_length(title) BETWEEN 1 AND 100),
-    description VARCHAR(3000),
-    module INTEGER NOT NULL REFERENCES school.modules(id),
-    min_experience INTEGER NOT NULL CHECK(min_experience>0),
-    max_experience INTEGER NOT NULL CHECK(min_experience>0),
-    hint_description VARCHAR(100) NOT NULL CHECK(char_length(name) BETWEEN 10 AND 100)
+CREATE TABLE app.activity (
+    user_id INTEGER NOT NULL REFERENCES app.users(id) ON DELETE CASCADE,
+    date TIMESTAMPTZ NOT NULL CHECK(date<=NOW()),
+    steps INTEGER NOT NULL CHECK(steps>=0)
 );
 
-CREATE TABLE school.completed_questions (
+CREATE TABLE app.achivements (
     id SERIAL PRIMARY KEY,
-    version BIGINT NOT NULL DEFAULT 1 CHECK(version>0),
-    user_id INTEGER PRIMARY KEY REFERENCES school.users(id),
-    question_id INTEGER NOT NULL REFERENCES school.questions(id)
+    title VARCHAR(20) NOT NULL CHECK(char_length(title) BETWEEN 1 AND 20),
+    description VARCHAR(1000)
 );
 
-CREATE TABLE school.tasks (
-    id SERIAL PRIMARY KEY,
-    version BIGINT NOT NULL DEFAULT 1 CHECK(version>0),
-    name VARCHAR(100) NOT NULL CHECK(char_length(name) BETWEEN 1 AND 100),
-    description VARCHAR(3000) NOT NULL CHECK(char_length(name) BETWEEN 10 AND 3000),
-    module INTEGER NOT NULL REFERENCES school.modules (id),
-    min_experience INTEGER NOT NULL CHECK(min_experience>0),
-    max_experience INTEGER NOT NULL CHECK(min_experience>0),
-    hint_description VARCHAR(100) NOT NULL CHECK(char_length(name) BETWEEN 10 AND 100)
+CREATE TABLE app.achivement_user (
+    user_id INTEGER NOT NULL REFERENCES app.users(id) ON DELETE CASCADE,
+    achivement_id INTEGER NOT NULL REFERENCES app.achivements(id) ON DELETE CASCADE,
+    count INTEGER NOT NULL CHECK(count>=0)
 );
 
-CREATE TABLE school.completed_tasks (
-    id SERIAL PRIMARY KEY,
-    version BIGINT NOT NULL DEFAULT 1 CHECK(version>0),
-    user_id INTEGER REFERENCES school.users(id),
-    task_id INTEGER NOT NULL REFERENCES school.tasks(id),
+CREATE TABLE app.battlepass_rewards (
+    min_streak INTEGER NOT NULL CHECK(min_streak>=0),
+    reward VARCHAR(50) NOT NULL CHECK(char_length(reward) BETWEEN 1 AND 50)
 );
-
-CREATE TABLE school.modules (
-    id SERIAL PRIMARY KEY,
-    version BIGINT NOT NULL DEFAULT 1 CHECK(version>0),
-    title VARCHAR(50) NOT NULL CHECK(char_length(title) BETWEEN 1 AND 50),
-    description VARCHAR(2000),
-    min_experience INTEGER NOT NULL CHECK(min_experience>0),
-    max_experience INTEGER NOT NULL CHECK(max_experience>0)
-);
-
-CREATE TABLE school.achievement (
-    id SERIAL PRIMARY KEY,
-    version BIGINT NOT NULL DEFAULT 1 CHECK(version>0),
-    name VARCHAR(20) CHECK(char_length(name) BETWEEN 1 AND 20),
-    description VARCHAR(100) CHECK(char_length(DESCRIPTION) BETWEEN 1 AND 100),
-    user_id INTEGER REFERENCES school.users(id)
-)
