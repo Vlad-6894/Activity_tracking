@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -17,6 +18,9 @@ type PostgresConfig struct {
 }
 
 func NewPostgresConfig() (PostgresConfig, error) {
+	// Ищем .env и в текущей директории, и во вложенной golang_school
+	_ = godotenv.Load(".env", "golang_school/.env", "../.env")
+
 	var cfg PostgresConfig
 	if err := envconfig.Process("POSTGRES", &cfg); err != nil {
 		return PostgresConfig{}, fmt.Errorf("process envconfig: %w", err)

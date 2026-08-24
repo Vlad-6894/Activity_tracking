@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"tg-echo-bot/golang_school/internal/core/config"
 	"tg-echo-bot/golang_school/internal/core/db"
@@ -12,15 +14,9 @@ import (
 )
 
 func main() {
-	// Задаем переменные окружения для envconfig
-	os.Setenv("POSTGRES_HOST", "127.0.0.1")
-	os.Setenv("POSTGRES_PORT", "5432")
-	os.Setenv("POSTGRES_USER", "postgres")
-	os.Setenv("POSTGRES_PASSWORD", "postgres")
-	os.Setenv("POSTGRES_DB", "postgres")
-	os.Setenv("POSTGRES_TIMEOUT", "5s")
-
-	ctx := context.Background()
+	// Контекст с отслеживанием системных сигналов завершения (Ctrl+C, SIGTERM)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
 	// 1. Инициализация конфига
 	cfg := config.NewPostgresConfigMust()
@@ -33,18 +29,18 @@ func main() {
 	defer pool.Close()
 	log.Println("Успешное подключение к PostgreSQL через pgxpool!")
 
-	// 3. Создаем репозиторий через конструктор
+	// 3. Создаем репозиторий через конструктор (принимает интерфейс db.Pool)
 	repo := user.NewRepository(pool)
 
-	// 4. Создаем пользователя через конструктор NewUser
+	// 4. Создаем пользователя через конструктор регистрации RegUser
 	goal := 10000
-	newUser := user.NewUser("Глеб", 28, &goal, 2)
+	newUser := user.RegUser("Глеб", 28, &goal, 2)
 
 	err = repo.CreateUser(ctx, newUser)
 	if err != nil {
 		log.Fatalf("Ошибка создания пользователя: %v", err)
 	}
-	fmt.Printf("Пользователь успешно создан с ID: %d\n", newUser.ID)
+	fmt.Printf("Пользователь успешно создан: %+v\n", newUser)
 
 	// 5. Проверяем получение пользователя
 	foundUser, err := repo.GetByID(ctx, newUser.ID)

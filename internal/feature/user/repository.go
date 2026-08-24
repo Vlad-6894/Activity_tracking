@@ -1,12 +1,12 @@
 package user
 
-import "github.com/jackc/pgx/v5/pgxpool"
+import "tg-echo-bot/golang_school/internal/core/db"
 
 type Repository struct {
-	pool *pgxpool.Pool
+	pool db.Pool
 }
 
-func NewRepository(pool *pgxpool.Pool) *Repository {
+func NewRepository(pool db.Pool) *Repository {
 	return &Repository{
 		pool: pool,
 	}
