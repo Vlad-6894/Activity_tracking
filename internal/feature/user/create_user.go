@@ -6,7 +6,6 @@ import (
 )
 
 func (r *Repository) CreateUser(ctx context.Context, u User) (User, error) {
-	// [ИЗМЕНЕНО]: Добавлена колонка tg_user_name в INSERT и RETURNING
 	query := `
 		INSERT INTO app.users (
 			full_name,
@@ -23,7 +22,6 @@ func (r *Repository) CreateUser(ctx context.Context, u User) (User, error) {
 	`
 
 	var created User
-	// [ИЗМЕНЕНО]: Передаем u.TelegramUserName ($2) и сканируем в &created.TelegramUserName
 	err := r.pool.QueryRow(
 		ctx,
 		query,

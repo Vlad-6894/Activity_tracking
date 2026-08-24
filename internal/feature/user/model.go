@@ -5,7 +5,7 @@ import "time"
 type User struct {
 	ID                 int
 	FullName           string
-	TelegramUserName   string // [ИЗМЕНЕНО]: Добавлено поле TelegramUserName (tg_user_name)
+	TelegramUserName   string
 	Age                int
 	GoogleRefreshToken string
 	StepsGoal          int
@@ -15,8 +15,14 @@ type User struct {
 	UpdatedAt          time.Time
 }
 
-// [ИЗМЕНЕНО]: Добавлен аргумент tgUserName в конструктор регистрации
-func RegUser(fullName string, tgUserName string, age int, googleRefreshToken string, stepsGoal int, restDays int) User {
+func RegUser(
+	fullName string,
+	tgUserName string,
+	age int,
+	googleRefreshToken string,
+	stepsGoal int,
+	restDays int,
+) User {
 	return User{
 		FullName:           fullName,
 		TelegramUserName:   tgUserName,
@@ -28,7 +34,6 @@ func RegUser(fullName string, tgUserName string, age int, googleRefreshToken str
 	}
 }
 
-// [ИЗМЕНЕНО]: Добавлен аргумент tgUserName в конструктор полной модели
 func NewUser(
 	id int,
 	fullName string,
