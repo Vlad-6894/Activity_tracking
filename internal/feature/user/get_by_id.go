@@ -5,12 +5,13 @@ import (
 	"fmt"
 )
 
-// [ИЗМЕНЕНО]: Возвращаем (User, error) по значению
 func (r *Repository) GetByID(ctx context.Context, id int) (User, error) {
+	// [ИЗМЕНЕНО]: Добавлена колонка tg_user_name в SELECT
 	query := `
 		SELECT 
 			id,
 			full_name,
+			tg_user_name,
 			age,
 			google_refresh_token,
 			steps_goal,
@@ -22,10 +23,11 @@ func (r *Repository) GetByID(ctx context.Context, id int) (User, error) {
 	`
 
 	var u User
-	// [ИЗМЕНЕНО]: Указатели только в аргументах Scan
+	// [ИЗМЕНЕНО]: Сканируем в &u.TelegramUserName
 	err := r.pool.QueryRow(ctx, query, id).Scan(
 		&u.ID,
 		&u.FullName,
+		&u.TelegramUserName,
 		&u.Age,
 		&u.GoogleRefreshToken,
 		&u.StepsGoal,

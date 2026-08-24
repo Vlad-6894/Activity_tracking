@@ -5,11 +5,12 @@ import (
 	"fmt"
 )
 
-// [ИЗМЕНЕНО]: Принимаем u User (по значению) и возвращаем (User, error)
 func (r *Repository) CreateUser(ctx context.Context, u User) (User, error) {
+	// [ИЗМЕНЕНО]: Добавлена колонка tg_user_name в INSERT и RETURNING
 	query := `
 		INSERT INTO app.users (
 			full_name,
+			tg_user_name,
 			age,
 			google_refresh_token,
 			steps_goal,
@@ -17,16 +18,17 @@ func (r *Repository) CreateUser(ctx context.Context, u User) (User, error) {
 			streak,
 			created_at
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, NOW())
-		RETURNING id, full_name, age, google_refresh_token, steps_goal, rest_days, streak, created_at;
+		VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+		RETURNING id, full_name, tg_user_name, age, google_refresh_token, steps_goal, rest_days, streak, created_at;
 	`
 
 	var created User
-	// [ИЗМЕНЕНО]: Указатели используются исключительно внутри Scan()
+	// [ИЗМЕНЕНО]: Передаем u.TelegramUserName ($2) и сканируем в &created.TelegramUserName
 	err := r.pool.QueryRow(
 		ctx,
 		query,
 		u.FullName,
+		u.TelegramUserName,
 		u.Age,
 		u.GoogleRefreshToken,
 		u.StepsGoal,
@@ -35,6 +37,7 @@ func (r *Repository) CreateUser(ctx context.Context, u User) (User, error) {
 	).Scan(
 		&created.ID,
 		&created.FullName,
+		&created.TelegramUserName,
 		&created.Age,
 		&created.GoogleRefreshToken,
 		&created.StepsGoal,

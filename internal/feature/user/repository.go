@@ -1,11 +1,10 @@
 package user
 
 import (
-	core_db "tg-echo-bot/golang_school/internal/core/db"
+	core_db "github.com/Vlad-6894/Activity_tracking/internal/core/db"
 )
 
 type Repository struct {
-	// [ИЗМЕНЕНО]: Используем core_db.Pool
 	pool core_db.Pool
 }
 

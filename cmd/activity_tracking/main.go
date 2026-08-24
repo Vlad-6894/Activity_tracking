@@ -2,30 +2,31 @@ package main
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
 
-	// [ИЗМЕНЕНО]: Обновлены пути к переименованным пакетам core_config и core_db
-	core_config "tg-echo-bot/golang_school/internal/core/config"
-	core_db "tg-echo-bot/golang_school/internal/core/db"
+	core_config "github.com/Vlad-6894/Activity_tracking/internal/core/config"
+	core_db "github.com/Vlad-6894/Activity_tracking/internal/core/db"
+	core_logger "github.com/Vlad-6894/Activity_tracking/internal/core/logger"
 )
 
 func main() {
+	logger := core_logger.Init()
+	logger.Info("Логер успешно инициализирован")
+
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	// 1. Инициализация конфига
 	cfg := core_config.NewPostgresConfigMust()
 
-	// 2. Инициализация пула соединений
 	pool, err := core_db.New(ctx, cfg)
 	if err != nil {
-		log.Fatalf("Ошибка подключения к PostgreSQL пулу: %v", err)
+		logger.Error("Ошибка подключения к PostgreSQL пулу", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 	defer pool.Close()
-	log.Println("Успешное подключение к PostgreSQL через pgxpool!")
 
-	// [ИЗМЕНЕНО]: Все тестовые создания пользователя удалены из main.go по замечанию Влада
+	logger.Info("Успешное подключение к PostgreSQL через pgxpool!")
 }

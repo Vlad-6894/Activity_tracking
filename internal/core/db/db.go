@@ -1,4 +1,3 @@
-// [ИЗМЕНЕНО]: Имя пакета изменено на core_db
 package core_db
 
 import (
@@ -9,7 +8,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	core_config "tg-echo-bot/golang_school/internal/core/config"
+	core_config "github.com/Vlad-6894/Activity_tracking/internal/core/config"
 )
 
 type Pool interface {
@@ -17,34 +16,24 @@ type Pool interface {
 	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
 	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
 	Close()
+	Ping(ctx context.Context) error
 }
 
-func New(ctx context.Context, cfg core_config.PostgresConfig) (*pgxpool.Pool, error) {
-	// [ИЗМЕНЕНО]: Из DSN убран timeout=...
-	dsn := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
-		cfg.User,
-		cfg.Password,
-		cfg.Host,
-		cfg.Port,
-		cfg.Database,
-	)
-
-	poolConfig, err := pgxpool.ParseConfig(dsn)
+func New(ctx context.Context, cfg core_config.PostgresConfig) (Pool, error) {
+	poolConfig, err := pgxpool.ParseConfig(cfg.ConnectionString())
 	if err != nil {
-		return nil, fmt.Errorf("parse postgres pool config: %w", err)
+		return nil, fmt.Errorf("parse postgres config: %w", err)
 	}
 
-	// [ИЗМЕНЕНО]: Таймаут теперь применяется через context.WithTimeout
-	connCtx, cancel := context.WithTimeout(ctx, cfg.Timeout)
+	connectCtx, cancel := context.WithTimeout(ctx, cfg.Timeout)
 	defer cancel()
 
-	pool, err := pgxpool.NewWithConfig(connCtx, poolConfig)
+	pool, err := pgxpool.NewWithConfig(connectCtx, poolConfig)
 	if err != nil {
 		return nil, fmt.Errorf("create postgres pool: %w", err)
 	}
 
-	if err := pool.Ping(connCtx); err != nil {
+	if err := pool.Ping(connectCtx); err != nil {
 		pool.Close()
 		return nil, fmt.Errorf("ping postgres pool: %w", err)
 	}
