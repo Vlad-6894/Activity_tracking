@@ -3,46 +3,56 @@ export
 
 export PROJECT_ROOT=$(shell pwd)
 
-postgres-up:
-	@docker compose up -d test-task-postgres
+env-up:
+	docker compose up -d activity-tracking-postgres
 
-postgres-down:
-	@docker compose down test-task-postgres
+env-down:
+	docker compose down activity-tracking-postgres
 
-postgres-cleanup:
-	@read -p "Очистить pg_data? Опасность утери данных. [y/N]: " choice; \
-	if [ "$$choice" = "y" ] || [ "$$choice" = "Y" ]; then \
-		docker compose down test-task-postgres port-forwarder && \
-		sudo rm -rf ${PROJECT_ROOT}/out/pg_data && \
-		echo "Очищено"; \
+ngrok-up:
+	@docker compose up -d activity-tracking-ngrok
+
+ngrok-down:
+	@docker compose down activity-tracking-ngrok
+
+env-cleanup:
+	@read -p "Очистить все volume файлы окружения? Опасность утери данных. [y.N]: " ans; \
+	if [ "$$ans" = "y" ]; then \
+		docker compose down -v activity-tracking-postgres && \
+		echo "Файлы окружения очищены"; \
 	else \
-		echo "Операция отменена"; \
+		echo "Очистка окружения отменена"; \
 	fi
 
+env-port-forward:
+	docker compose up -d activity-tracking-port-forwarder
 
-create-migrate:
+env-port-close:
+	docker compose down activity-tracking-port-forwarder
+
+migrate-create:
 	@if [ -z "$(seq)" ]; then \
-		echo "Нет параметра seq"; \
+		echo "Отсутсвует необходимый параметр seq. Пример: make migrate-create seq=init"; \
 		exit 1; \
-	fi;
-	@docker compose run --rm postgres-migrate \
+	fi; \
+	docker compose run --rm activity-tracking-migrate \
 		create \
 		-ext sql \
 		-dir /migrations \
 		-seq "$(seq)"
 
 migrate-up:
-	@make migrate-action action=up
+	make migrate-action action=up
 
 migrate-down:
-	@make migrate-action action=down
+	make migrate-action action=down
 
 migrate-action:
 	@if [ -z "$(action)" ]; then \
-		echo "Нет параметра action"; \
+		echo "Отсутсвует необходимый параметр action. Пример: make migrate-action action=up"; \
 		exit 1; \
-	fi;
-	@docker compose run --rm postgres-migrate \
+	fi; \
+	docker compose run --rm activity-tracking-migrate \
 		-path /migrations \
-		-database postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@test-task-postgres:5432/${POSTGRES_DB}?sslmode=disable \
+		-database postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@activity-tracking-postgres:5432/${POSTGRES_DB}?sslmode=disable \
 		"$(action)"
