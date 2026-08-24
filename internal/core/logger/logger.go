@@ -42,11 +42,11 @@ func FromContext(ctx context.Context) *Logger {
 func NewLogger(config LoggerConfig) (*Logger, error) {
 	zapLvl := zap.NewAtomicLevel()
 	if err := zapLvl.UnmarshalText([]byte(config.Level)); err != nil {
-		return nil, fmt.Errorf("Unmarshal log level error: %w", err)
+		return nil, fmt.Errorf("unmarshal log level error: %w", err)
 	}
 
 	if err := os.MkdirAll(config.Folder, 0755); err != nil {
-		return nil, fmt.Errorf("Mkdirerror: %w", err)
+		return nil, fmt.Errorf("create log folder error: %w", err)
 	}
 
 	timestamp := time.Now().UTC().Format("2006-01-02T15-04-05.000000")

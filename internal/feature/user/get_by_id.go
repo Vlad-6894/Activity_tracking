@@ -6,7 +6,6 @@ import (
 )
 
 func (r *Repository) GetByID(ctx context.Context, id int) (User, error) {
-	// [ИЗМЕНЕНО]: Добавлена колонка tg_user_name в SELECT
 	query := `
 		SELECT 
 			id,
@@ -23,7 +22,6 @@ func (r *Repository) GetByID(ctx context.Context, id int) (User, error) {
 	`
 
 	var u User
-	// [ИЗМЕНЕНО]: Сканируем в &u.TelegramUserName
 	err := r.pool.QueryRow(ctx, query, id).Scan(
 		&u.ID,
 		&u.FullName,

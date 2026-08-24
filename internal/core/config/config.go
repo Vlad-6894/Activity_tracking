@@ -16,9 +16,15 @@ type PostgresConfig struct {
 	Timeout  time.Duration `envconfig:"TIMEOUT" required:"true"`
 }
 
-func (c PostgresConfig) ConnectionString() string {
-	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
-		c.User, c.Password, c.Host, c.Port, c.Database)
+func (cfg PostgresConfig) ConnectionString() string {
+	return fmt.Sprintf(
+		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		cfg.User,
+		cfg.Password,
+		cfg.Host,
+		cfg.Port,
+		cfg.Database,
+	)
 }
 
 func NewPostgresConfig() (PostgresConfig, error) {
