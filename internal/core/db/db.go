@@ -2,42 +2,38 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
-	"time"
 
-	_ "github.com/jackc/pgx/v5/stdlib"
+	"tg-echo-bot/golang_school/internal/core/config"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type Config struct {
-	Host     string
-	Port     string
-	User     string
-	Password string
-	DBName   string
-	SSLMode  string
-}
-
-func NewConnection(cfg Config) (*sql.DB, error) {
-	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
-		cfg.User, cfg.Password, cfg.Host, cfg.Port, cfg.DBName, cfg.SSLMode,
+func New(ctx context.Context, cfg config.PostgresConfig) (*pgxpool.Pool, error) {
+	connStr := fmt.Sprintf(
+		"postgres://%s:%s@%s:%s/%s?sslmode=disable&connect_timeout=%d",
+		cfg.User,
+		cfg.Password,
+		cfg.Host,
+		cfg.Port,
+		cfg.Database,
+		int(cfg.Timeout.Seconds()),
 	)
 
-	db, err := sql.Open("pgx", dsn)
+	poolConfig, err := pgxpool.ParseConfig(connStr)
 	if err != nil {
-		return nil, fmt.Errorf("ошибка открытия подключения: %w", err)
+		return nil, fmt.Errorf("parse pool config: %w", err)
 	}
 
-	db.SetMaxOpenConns(25)
-	db.SetMaxIdleConns(10)
-	db.SetConnMaxLifetime(5 * time.Minute)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	if err := db.PingContext(ctx); err != nil {
-		return nil, fmt.Errorf("база данных Postgres недоступна: %w", err)
+	pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
+	if err != nil {
+		return nil, fmt.Errorf("create pgx pool: %w", err)
 	}
 
-	return db, nil
+	if err := pool.Ping(ctx); err != nil {
+		pool.Close()
+		return nil, fmt.Errorf("ping postgres pool: %w", err)
+	}
+
+	return pool, nil
 }

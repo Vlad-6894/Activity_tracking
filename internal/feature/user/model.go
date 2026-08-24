@@ -3,13 +3,23 @@ package user
 import "time"
 
 type User struct {
-	ID                 int64      `json:"id"`
-	FullName           string     `json:"full_name"`
-	Age                int        `json:"age"`
-	GoogleRefreshToken *string    `json:"google_refresh_token,omitempty"`
-	StepsGoal          *int       `json:"steps_goal,omitempty"`
-	RestDays           int        `json:"rest_days"`
-	Streak             int        `json:"streak"`
-	CreatedAt          time.Time  `json:"created_at"`
-	UpdatedAt          *time.Time `json:"updated_at,omitempty"`
+	ID                 int64
+	FullName           string
+	Age                int
+	GoogleRefreshToken *string
+	StepsGoal          *int
+	RestDays           int
+	Streak             int
+	CreatedAt          time.Time
+	UpdatedAt          *time.Time
+}
+
+func NewUser(fullName string, age int, stepsGoal *int, restDays int) *User {
+	return &User{
+		FullName:  fullName,
+		Age:       age,
+		StepsGoal: stepsGoal,
+		RestDays:  restDays,
+		Streak:    0,
+	}
 }
