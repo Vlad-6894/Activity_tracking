@@ -1,13 +1,14 @@
 package user
 
-import "tg-echo-bot/golang_school/internal/core/db"
+import (
+	core_db "tg-echo-bot/golang_school/internal/core/db"
+)
 
 type Repository struct {
-	pool db.Pool
+	// [ИЗМЕНЕНО]: Используем core_db.Pool
+	pool core_db.Pool
 }
 
-func NewRepository(pool db.Pool) *Repository {
-	return &Repository{
-		pool: pool,
-	}
+func NewRepository(pool core_db.Pool) *Repository {
+	return &Repository{pool: pool}
 }

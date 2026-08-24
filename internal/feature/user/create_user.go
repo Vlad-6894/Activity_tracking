@@ -5,14 +5,27 @@ import (
 	"fmt"
 )
 
-func (r *Repository) CreateUser(ctx context.Context, u *User) error {
+// [ИЗМЕНЕНО]: Принимаем u User (по значению) и возвращаем (User, error)
+func (r *Repository) CreateUser(ctx context.Context, u User) (User, error) {
 	query := `
-		INSERT INTO app.users (full_name, age, google_refresh_token, steps_goal, rest_days, streak, created_at)
+		INSERT INTO app.users (
+			full_name,
+			age,
+			google_refresh_token,
+			steps_goal,
+			rest_days,
+			streak,
+			created_at
+		)
 		VALUES ($1, $2, $3, $4, $5, $6, NOW())
-		RETURNING id, full_name, age, google_refresh_token, steps_goal, rest_days, streak, created_at, updated_at;
+		RETURNING id, full_name, age, google_refresh_token, steps_goal, rest_days, streak, created_at;
 	`
 
-	err := r.pool.QueryRow(ctx, query,
+	var created User
+	// [ИЗМЕНЕНО]: Указатели используются исключительно внутри Scan()
+	err := r.pool.QueryRow(
+		ctx,
+		query,
 		u.FullName,
 		u.Age,
 		u.GoogleRefreshToken,
@@ -20,20 +33,19 @@ func (r *Repository) CreateUser(ctx context.Context, u *User) error {
 		u.RestDays,
 		u.Streak,
 	).Scan(
-		&u.ID,
-		&u.FullName,
-		&u.Age,
-		&u.GoogleRefreshToken,
-		&u.StepsGoal,
-		&u.RestDays,
-		&u.Streak,
-		&u.CreatedAt,
-		&u.UpdatedAt,
+		&created.ID,
+		&created.FullName,
+		&created.Age,
+		&created.GoogleRefreshToken,
+		&created.StepsGoal,
+		&created.RestDays,
+		&created.Streak,
+		&created.CreatedAt,
 	)
 
 	if err != nil {
-		return fmt.Errorf("create user: %w", err)
+		return User{}, fmt.Errorf("create user: %w", err)
 	}
 
-	return nil
+	return created, nil
 }
