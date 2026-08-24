@@ -1,4 +1,3 @@
-// [ИЗМЕНЕНО]: Имя пакета возвращено на core_config
 package core_config
 
 import (
@@ -15,6 +14,11 @@ type PostgresConfig struct {
 	Password string        `envconfig:"PASSWORD" required:"true"`
 	Database string        `envconfig:"DB" required:"true"`
 	Timeout  time.Duration `envconfig:"TIMEOUT" required:"true"`
+}
+
+func (c PostgresConfig) ConnectionString() string {
+	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		c.User, c.Password, c.Host, c.Port, c.Database)
 }
 
 func NewPostgresConfig() (PostgresConfig, error) {

@@ -5,7 +5,6 @@ import (
 	"os"
 )
 
-// [ИЗМЕНЕНО]: Функция инициализации структурированного slog-логгера
 func Init() *slog.Logger {
 	opts := &slog.HandlerOptions{
 		Level: slog.LevelInfo,
