@@ -1,4 +1,4 @@
-package core_db
+package db
 
 import (
 	"context"
@@ -7,8 +7,6 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
-
-	core_config "github.com/Vlad-6894/Activity_tracking/internal/core/config"
 )
 
 type Pool interface {
@@ -19,7 +17,7 @@ type Pool interface {
 	Ping(ctx context.Context) error
 }
 
-func New(ctx context.Context, cfg core_config.PostgresConfig) (Pool, error) {
+func New(ctx context.Context, cfg Config) (Pool, error) {
 	poolConfig, err := pgxpool.ParseConfig(cfg.ConnectionString())
 	if err != nil {
 		return nil, fmt.Errorf("parse postgres config: %w", err)
