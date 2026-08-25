@@ -7,8 +7,9 @@ import (
 
 func (r *Repository) GetByID(ctx context.Context, id int) (User, error) {
 	query := `
-		SELECT 
+		SELECT
 			id,
+			telegram_id,
 			full_name,
 			tg_user_name,
 			age,
@@ -24,6 +25,7 @@ func (r *Repository) GetByID(ctx context.Context, id int) (User, error) {
 	var u User
 	err := r.pool.QueryRow(ctx, query, id).Scan(
 		&u.ID,
+		&u.TelegramID,
 		&u.FullName,
 		&u.TelegramUserName,
 		&u.Age,

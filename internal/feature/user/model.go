@@ -4,6 +4,7 @@ import "time"
 
 type User struct {
 	ID                 int
+	TelegramID         int64
 	FullName           string
 	TelegramUserName   string
 	Age                int
@@ -16,6 +17,7 @@ type User struct {
 }
 
 func RegUser(
+	telegramID int64,
 	fullName string,
 	tgUserName string,
 	age int,
@@ -24,6 +26,7 @@ func RegUser(
 	restDays int,
 ) User {
 	return User{
+		TelegramID:         telegramID,
 		FullName:           fullName,
 		TelegramUserName:   tgUserName,
 		Age:                age,
@@ -36,6 +39,7 @@ func RegUser(
 
 func NewUser(
 	id int,
+	telegramID int64,
 	fullName string,
 	tgUserName string,
 	age int,
@@ -48,6 +52,7 @@ func NewUser(
 ) User {
 	return User{
 		ID:                 id,
+		TelegramID:         telegramID,
 		FullName:           fullName,
 		TelegramUserName:   tgUserName,
 		Age:                age,
