@@ -1,4 +1,4 @@
-package core_logger
+package logger
 
 import (
 	"context"
@@ -13,9 +13,7 @@ import (
 
 type loggerContextKey struct{}
 
-var (
-	key = loggerContextKey{}
-)
+var key = loggerContextKey{}
 
 type Logger struct {
 	*zap.Logger
@@ -23,30 +21,26 @@ type Logger struct {
 }
 
 func ToContext(ctx context.Context, log *Logger) context.Context {
-	return context.WithValue(
-		ctx,
-		key,
-		log,
-	)
+	return context.WithValue(ctx, key, log)
 }
 
 func FromContext(ctx context.Context) *Logger {
 	log, ok := ctx.Value(key).(*Logger)
 	if !ok {
-		panic("No logger in the context!")
+		return &Logger{Logger: zap.NewNop()}
 	}
 
 	return log
 }
 
-func NewLogger(config LoggerConfig) (*Logger, error) {
+func New(config Config) (*Logger, error) {
 	zapLvl := zap.NewAtomicLevel()
 	if err := zapLvl.UnmarshalText([]byte(config.Level)); err != nil {
-		return nil, fmt.Errorf("unmarshal log level error: %w", err)
+		return nil, fmt.Errorf("unmarshal log level: %w", err)
 	}
 
 	if err := os.MkdirAll(config.Folder, 0755); err != nil {
-		return nil, fmt.Errorf("create log folder error: %w", err)
+		return nil, fmt.Errorf("create log folder: %w", err)
 	}
 
 	timestamp := time.Now().UTC().Format("2006-01-02T15-04-05.000000")
@@ -55,9 +49,9 @@ func NewLogger(config LoggerConfig) (*Logger, error) {
 		fmt.Sprintf("%s.log", timestamp),
 	)
 
-	logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY, 0644)
+	logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
-		return nil, fmt.Errorf("log file open error: %w", err)
+		return nil, fmt.Errorf("open log file: %w", err)
 	}
 
 	zapConfig := zap.NewDevelopmentEncoderConfig()
@@ -79,8 +73,11 @@ func NewLogger(config LoggerConfig) (*Logger, error) {
 }
 
 func (l *Logger) Close() {
+	// синхронизируем логи перед закрытием
+	_ = l.Sync()
+
 	if err := l.file.Close(); err != nil {
-		fmt.Println("Failed to close logger: ", err)
+		fmt.Println("failed to close log file:", err)
 	}
 }
 
