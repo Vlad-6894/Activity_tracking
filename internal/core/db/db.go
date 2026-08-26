@@ -3,6 +3,7 @@ package core_db
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -15,11 +16,16 @@ type Pool interface {
 	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
 	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
 	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+	GetTimeot() time.Duration
 	Close()
-	Ping(ctx context.Context) error
 }
 
-func New(ctx context.Context, cfg core_config.PostgresConfig) (Pool, error) {
+type PostgresPool struct {
+	*pgxpool.Pool
+	timeout time.Duration
+}
+
+func New(ctx context.Context, cfg core_config.PostgresConfig) (*PostgresPool, error) {
 	poolConfig, err := pgxpool.ParseConfig(cfg.ConnectionString())
 	if err != nil {
 		return nil, fmt.Errorf("parse postgres config: %w", err)
@@ -38,5 +44,14 @@ func New(ctx context.Context, cfg core_config.PostgresConfig) (Pool, error) {
 		return nil, fmt.Errorf("ping postgres pool: %w", err)
 	}
 
-	return pool, nil
+	postgresPool := &PostgresPool{
+		Pool:    pool,
+		timeout: cfg.Timeout,
+	}
+
+	return postgresPool, nil
+}
+
+func (p *PostgresPool) GetTimeot() time.Duration {
+	return p.timeout
 }
