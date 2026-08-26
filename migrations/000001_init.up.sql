@@ -2,6 +2,8 @@ CREATE SCHEMA app;
 
 CREATE TABLE app.users (
     id SERIAL PRIMARY KEY,
+    telegram_id  BIGINT NOT NULL UNIQUE,
+    telegram_username VARCHAR(32),
     full_name VARCHAR(100) NOT NULL CHECK(char_length(full_name) BETWEEN 2 AND 100),
     age INTEGER NOT NULL CHECK(age>=0),
     google_refresh_token TEXT,

@@ -1,8 +1,9 @@
 module github.com/Vlad-6894/Activity_tracking
 
-go 1.25.9
+go 1.27.0
 
 require (
+	github.com/go-telegram/bot v1.23.0
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	go.uber.org/zap v1.28.0

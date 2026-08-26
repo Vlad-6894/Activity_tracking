@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Activity Tracking</title>
+<script>
+  (function () {
+    var payload = JSON.stringify({ eventType: "web_app_ready", eventData: null });
+
+    try { window.TelegramWebviewProxy && window.TelegramWebviewProxy.postEvent("web_app_ready", null); } catch (e) {}
+    try { window.external && window.external.notify && window.external.notify(payload); } catch (e) {}
+    try { window.parent && window.parent.postMessage(payload, "https://web.telegram.org"); } catch (e) {}
+
+    window.onerror = function (message, source, line) {
+      var box = document.getElementById("result") || document.body;
+      if (!box) return;
+      box.className = "fail";
+      box.textContent = "JS error: " + message + " @ " + line;
+    };
+  })();
+</script>
+<!-- Served from web/public, not telegram.org: the demo path must not depend on a third-party
+     host being reachable from whatever network the device is on. -->
+<script src="/telegram-web-app.js"></script>
+<style>
+  /* ══════════════════════════════════════════════
+     TELEGRAM THEME
+     Every colour comes from a --tg-theme-* variable with a hex fallback. A hardcoded
+     background inside a dark Telegram is the single most common "this is just a website" tell.
+     ══════════════════════════════════════════════ */
+  :root {
+    --bg:        var(--tg-theme-bg-color, #ffffff);
+    --secondary: var(--tg-theme-secondary-bg-color, #f1f1f4);
+    --text:      var(--tg-theme-text-color, #0f0f0f);
+    --hint:      var(--tg-theme-hint-color, #8a8a8e);
+    --link:      var(--tg-theme-link-color, #2f7ddb);
+    --button:    var(--tg-theme-button-color, #2f7ddb);
+    --button-tx: var(--tg-theme-button-text-color, #ffffff);
+    --pad-top: 0px;
+    --pad-bottom: 0px;
+  }
+
+  /* ══════════════════════════════════════════════
+     RESET & LAYOUT
+     ══════════════════════════════════════════════ */
+  * { box-sizing: border-box; }
+
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    /* Never 100vh: in Telegram's webview it includes chrome that is not actually usable. */
+    min-height: var(--tg-viewport-stable-height, 100vh);
+    padding: calc(20px + var(--pad-top)) 20px calc(24px + var(--pad-bottom));
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  /* ══════════════════════════════════════════════
+     COMPONENTS
+     ══════════════════════════════════════════════ */
+
+  /* ── Badge ── */
+  .badge {
+    align-self: flex-start;
+    background: var(--secondary);
+    color: var(--hint);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 13px;
+    letter-spacing: .02em;
+  }
+
+  /* ── Typography ── */
+  h1 { margin: 0; font-size: 27px; line-height: 1.2; letter-spacing: -.02em; }
+
+  .lead { margin: 0; color: var(--hint); font-size: 15px; }
+
+  /* ── Card ── */
+  .card {
+    background: var(--secondary);
+    border-radius: 14px;
+    padding: 14px 16px;
+  }
+
+  .card h2 {
+    margin: 0 0 10px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--hint);
+    font-weight: 600;
+  }
+
+  /* ── Definition list ── */
+  dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 7px 14px; font-size: 14px; }
+  dt { color: var(--hint); }
+  dd { margin: 0; text-align: right; overflow-wrap: anywhere; }
+
+  /* ── Button ── */
+  button {
+    appearance: none;
+    border: 0;
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    background: var(--button);
+    color: var(--button-tx);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  button:disabled { opacity: .55; }
+
+  /* ── Result line ── */
+  #result { font-size: 14px; margin: 0; overflow-wrap: anywhere; }
+  #result.ok   { color: var(--link); }
+  #result.fail { color: #e05c4b; }
+
+  /* ── Footer ── */
+  footer { margin-top: auto; color: var(--hint); font-size: 12px; }
+</style>
+</head>
+<body>
+
+  <!-- ═══════════════ HEADER ═══════════════ -->
+  <span class="badge">MVP реализация MiniApp</span>
+
+  <div>
+    <h1>Mini App загружен</h1>
+  </div>
+
+  <!-- ═══════════════ TELEGRAM STATUS ═══════════════ -->
+  <section class="card">
+    <h2>Что говорит Telegram</h2>
+    <dl>
+      <dt>Платформа</dt><dd id="platform">—</dd>
+      <dt>Пользователь</dt><dd id="user">—</dd>
+    </dl>
+  </section>
+
+  <!-- ═══════════════ BACKEND CHECK ═══════════════ -->
+  <section class="card">
+    <h2>Что говорит бэкенд</h2>
+    <button id="check">Проверить бэкенд</button>
+    <p id="result" style="margin-top:12px">Нажми, чтобы отправить initData на сервер и проверить подпись.</p>
+  </section>
+
+  <!-- ═══════════════ FOOTER ═══════════════ -->
+  <footer>Activity Tracking · интеграция с Google Health</footer>
+
+<script>
+(function () {
+
+// ─────────────────────────────────────────────────────────
+// BOOTSTRAP
+// ─────────────────────────────────────────────────────────
+  var tg = window.Telegram && window.Telegram.WebApp;
+  var $ = function (id) { return document.getElementById(id); };
+  var result = $("result");
+
+  if (!tg) {
+    result.className = "fail";
+    result.textContent = "Страница открыта вне Telegram — initData недоступна. Открой её кнопкой в боте.";
+    $("check").disabled = true;
+    return;
+  }
+
+  tg.ready();
+  tg.expand();
+
+  // ─── Version gate ───────────────────────────────────────
+  // Newer methods no-op or throw on an older client, so every one of them is gated.
+  var atLeast = function (v) {
+    return typeof tg.isVersionAtLeast === "function" && tg.isVersionAtLeast(v);
+  };
+
+  // Without this a vertical swipe closes the app mid-scroll — the classic on-stage failure.
+  if (atLeast("7.7") && tg.disableVerticalSwipes) tg.disableVerticalSwipes();
+
+// ─────────────────────────────────────────────────────────
+// SAFE AREA
+// ─────────────────────────────────────────────────────────
+  // env(safe-area-inset-*) is unreliable in Telegram's iOS webview, so pad from both insets
+  // Telegram reports instead.
+  function applyInsets() {
+    var safe = (atLeast("8.0") && tg.safeAreaInset) || { top: 0, bottom: 0 };
+    var content = (atLeast("8.0") && tg.contentSafeAreaInset) || { top: 0, bottom: 0 };
+    var root = document.documentElement.style;
+    root.setProperty("--pad-top", ((safe.top || 0) + (content.top || 0)) + "px");
+    root.setProperty("--pad-bottom", ((safe.bottom || 0) + (content.bottom || 0)) + "px");
+  }
+  applyInsets();
+  if (tg.onEvent) {
+    tg.onEvent("safeAreaChanged", applyInsets);
+    tg.onEvent("contentSafeAreaChanged", applyInsets);
+  }
+
+// ─────────────────────────────────────────────────────────
+// TELEGRAM STATUS
+// ─────────────────────────────────────────────────────────
+  var u = (tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
+  $("platform").textContent = tg.platform || "—";
+  $("user").textContent = u ? (u.first_name + (u.username ? " (@" + u.username + ")" : "")) : "нет данных";
+
+  // ─── Haptics ────────────────────────────────────────────
+  // Highest felt-quality-per-line in the whole Telegram API.
+  function haptic(style) {
+    try { tg.HapticFeedback && tg.HapticFeedback.impactOccurred(style); } catch (e) {}
+  }
+
+// ─────────────────────────────────────────────────────────
+// BACKEND CHECK
+// ─────────────────────────────────────────────────────────
+  $("check").addEventListener("click", function () {
+    haptic("light");
+
+    var button = this;
+    button.disabled = true;
+    result.className = "";
+    result.textContent = "Спрашиваю сервер…";
+
+    fetch("/api/v1/miniapp/me", {
+      method: "POST",
+      headers: { "Authorization": "tma " + (tg.initData || "") }
+    })
+      .then(function (r) { return r.json().then(function (b) { return { status: r.status, body: b }; }); })
+      .then(function (res) {
+        if (res.body && res.body.ok) {
+          result.className = "ok";
+          result.textContent = "Бэкенд узнал тебя: " + res.body.first_name +
+            (res.body.username ? " (@" + res.body.username + ")" : "") + ", id " + res.body.id;
+          haptic("medium");
+        } else {
+          result.className = "fail";
+          result.textContent = "HTTP " + res.status + " · " + ((res.body && res.body.error) || "неизвестная ошибка");
+        }
+      })
+      .catch(function (err) {
+        result.className = "fail";
+        result.textContent = "Сеть не ответила: " + err;
+      })
+      .finally(function () { button.disabled = false; });
+  });
+})();
+</script>
+</body>
+</html>

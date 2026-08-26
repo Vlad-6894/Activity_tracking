@@ -1,4 +1,4 @@
-package core_config
+package db
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
-type PostgresConfig struct {
+type Config struct {
 	Host     string        `envconfig:"HOST" required:"true"`
 	Port     string        `envconfig:"PORT" default:"5432"`
 	User     string        `envconfig:"USER" required:"true"`
@@ -16,7 +16,7 @@ type PostgresConfig struct {
 	Timeout  time.Duration `envconfig:"TIMEOUT" required:"true"`
 }
 
-func (cfg PostgresConfig) ConnectionString() string {
+func (cfg Config) ConnectionString() string {
 	return fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		cfg.User,
@@ -27,18 +27,10 @@ func (cfg PostgresConfig) ConnectionString() string {
 	)
 }
 
-func NewPostgresConfig() (PostgresConfig, error) {
-	var cfg PostgresConfig
+func NewConfig() (Config, error) {
+	var cfg Config
 	if err := envconfig.Process("POSTGRES", &cfg); err != nil {
-		return PostgresConfig{}, fmt.Errorf("process envconfig: %w", err)
+		return Config{}, fmt.Errorf("process postgres envconfig: %w", err)
 	}
 	return cfg, nil
-}
-
-func NewPostgresConfigMust() PostgresConfig {
-	cfg, err := NewPostgresConfig()
-	if err != nil {
-		panic(fmt.Errorf("get postgres connection pool config: %w", err))
-	}
-	return cfg
 }

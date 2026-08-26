@@ -1,4 +1,4 @@
-package core_logger
+package logger
 
 import (
 	"fmt"
@@ -6,26 +6,17 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
-type LoggerConfig struct {
+type Config struct {
 	Level  string `envconfig:"LEVEL" default:"DEBUG"`
 	Folder string `envconfig:"FOLDER" required:"true"`
 }
 
-func NewLoggerConfig() (LoggerConfig, error) {
-	var config LoggerConfig
+func NewConfig() (Config, error) {
+	var cfg Config
 
-	if err := envconfig.Process("LOGGER", &config); err != nil {
-		return LoggerConfig{}, fmt.Errorf("process envconfig error: %w", err)
+	if err := envconfig.Process("LOGGER", &cfg); err != nil {
+		return Config{}, fmt.Errorf("process logger envconfig: %w", err)
 	}
 
-	return config, nil
-}
-
-func NewLoggerConfigMust() LoggerConfig {
-	config, err := NewLoggerConfig()
-	if err != nil {
-		panic(err)
-	}
-
-	return config
+	return cfg, nil
 }
